@@ -1,219 +1,308 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>🇺🇿 O'zbek TV — Player</title>
-<style>
-  :root{--bg:#0b0f17;--panel:#141b2c;--soft:#1b2340;--text:#e9ecf1;}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif;display:grid;grid-template-columns:320px 1fr;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
-  header{grid-column:1 / -1;background:var(--panel);display:flex;gap:10px;align-items:center;padding:10px}
-  header h1{margin:0;font-size:18px;white-space:nowrap}
-  .input{flex:1;display:flex;gap:8px}
-  input,select,button{padding:8px 10px;border:none;border-radius:8px;background:#202945;color:#fff;outline:none}
-  button{cursor:pointer}
-  aside{background:#0f1526;overflow:auto;border-right:1px solid #162040}
-  .toolbar{display:flex;gap:8px;padding:10px;position:sticky;top:0;background:#0f1526;z-index:2;border-bottom:1px solid #162040}
-  #channels{list-style:none;margin:0;padding:0}
-  #channels li{display:grid;grid-template-columns:60px 1fr auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #162040;cursor:pointer}
-  #channels li:hover{background:#121a32}
-  #channels img{width:60px;height:36px;object-fit:cover;border-radius:6px;background:#000}
-  .meta{line-height:1.15}
-  .name{font-weight:700}
-  .sub{opacity:.75;font-size:12px}
-  .fav{background:transparent;border:1px solid #33406b;border-radius:8px;padding:6px 10px}
-  .player{position:relative;background:#000}
-  video{width:100%;height:100%;display:block;background:#000}
-  .now{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);backdrop-filter: blur(6px);padding:8px 10px;border-radius:10px;font-size:12px}
-  @media(max-width:900px){body{grid-template-columns:1fr;grid-template-rows:auto 260px 1fr}aside{grid-row:3}}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>🇺🇿 O'zbek TV — Player</title>
+  <style>
+    :root{--bg:#0b0f17;--panel:#141b2c;--soft:#1b2340;--text:#e9ecf1;}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif;display:grid;grid-template-columns:320px 1fr;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
+    header{grid-column:1 / -1;background:var(--panel);display:flex;gap:10px;align-items:center;padding:10px}
+    header h1{margin:0;font-size:18px;white-space:nowrap}
+    .input{flex:1;display:flex;gap:8px}
+    input,select,button{padding:8px 10px;border:none;border-radius:8px;background:#202945;color:#fff;outline:none}
+    button{cursor:pointer}
+    aside{background:#0f1526;overflow:auto;border-right:1px solid #162040}
+    .toolbar{display:flex;gap:8px;padding:10px;position:sticky;top:0;background:#0f1526;z-index:2;border-bottom:1px solid #162040}
+    #channels{list-style:none;margin:0;padding:0}
+    #channels li{display:grid;grid-template-columns:60px 1fr auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #162040;cursor:pointer}
+    #channels li:hover{background:#121a32}
+    #channels img{width:60px;height:36px;object-fit:cover;border-radius:6px;background:#000}
+    .meta{line-height:1.15}
+    .name{font-weight:700}
+    .sub{opacity:.75;font-size:12px}
+    .fav{background:transparent;border:1px solid #33406b;border-radius:8px;padding:6px 10px}
+    .player{position:relative;background:#000}
+    video{width:100%;height:100%;display:block;background:#000}
+    .now{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);backdrop-filter: blur(6px);padding:8px 10px;border-radius:10px;font-size:12px}
+    @media(max-width:900px){body{grid-template-columns:1fr;grid-template-rows:auto 260px 1fr}aside{grid-row:3}}
+    /* Cast tugmasi uslubi */
+    google-cast-launcher {
+      --discovery-color:#8ab4ff;
+      width:40px;height:40px;border-radius:8px;background:#202945;display:inline-grid;place-items:center;
+    }
+    .cast-wrap{display:flex;gap:8px;align-items:center}
+  </style>
 </head>
 <body>
+  <header>
+    <h1>🇺🇿 O'zbek TV</h1>
+    <div class="input">
+      <input id="search" placeholder="Kanal yoki toifa bo‘yicha qidirish…">
+      <select id="filter">
+        <option value="all">Barchasi</option>
+        <option value="favorites">👍 Sevimlilar</option>
+        <option value="news">🗞️ Yangilik</option>
+        <option value="entertainment">🎭 Ko‘ngilochar</option>
+        <option value="sports">🏅 Sport</option>
+        <option value="music">🎵 Musiqa</option>
+        <option value="kids">🧒 Bolalar</option>
+        <option value="religious">🕋 Diniy</option>
+        <option value="education">📚 Ta’lim</option>
+        <option value="regional">📡 Hududiy</option>
+      </select>
+      <select id="sourceSel" title="Playlist manbasi">
+        <option value="uz">Uzbekistan (countries/uz.m3u)</option>
+        <option value="lang">Uzbek tili (languages/uz.m3u)</option>
+      </select>
+    </div>
 
-<header>
-  <h1>🇺🇿 O'zbek TV</h1>
-  <div class="input">
-    <input id="search" placeholder="Kanal yoki toifa bo‘yicha qidirish…">
-    <select id="filter">
-      <option value="all">Barchasi</option>
-      <option value="favorites">👍 Sevimlilar</option>
-      <option value="news">🗞️ Yangilik</option>
-      <option value="entertainment">🎭 Ko‘ngilochar</option>
-      <option value="sports">🏅 Sport</option>
-      <option value="music">🎵 Musiqa</option>
-      <option value="kids">🧒 Bolalar</option>
-      <option value="religious">🕋 Diniy</option>
-      <option value="education">📚 Ta’lim</option>
-      <option value="regional">📡 Hududiy</option>
-    </select>
-    <select id="sourceSel" title="Playlist manbasi">
-      <option value="uz">Uzbekistan (countries/uz.m3u)</option>
-      <option value="lang">Uzbek tili (languages/uz.m3u)</option>
-    </select>
+    <div class="cast-wrap">
+      <!-- Chromecast tugmasi -->
+      <google-cast-launcher title="Televizorga uzatish"></google-cast-launcher>
+      <button id="reload">↻ Yangilash</button>
+    </div>
+  </header>
+
+  <aside>
+    <div class="toolbar">
+      <span id="count">0 kanal</span>
+    </div>
+    <ul id="channels"></ul>
+  </aside>
+
+  <div class="player">
+    <video id="video" controls autoplay playsinline></video>
+    <div class="now" id="nowInfo">Hech narsa ijro etilmayapti</div>
   </div>
-  <button id="reload">↻ Yangilash</button>
-</header>
 
-<aside>
-  <div class="toolbar">
-    <span id="count">0 kanal</span>
-  </div>
-  <ul id="channels"></ul>
-</aside>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- Google Cast Sender SDK -->
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
-<div class="player">
-  <video id="video" controls autoplay playsinline></video>
-  <div class="now" id="nowInfo">Hech narsa ijro etilmayapti</div>
-</div>
+  <script>
+    const listEl = document.getElementById('channels');
+    const searchEl = document.getElementById('search');
+    const filterEl = document.getElementById('filter');
+    const sourceSel = document.getElementById('sourceSel');
+    const reloadBtn = document.getElementById('reload');
+    const video = document.getElementById('video');
+    const nowInfo = document.getElementById('nowInfo');
+    const countEl = document.getElementById('count');
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
-const listEl = document.getElementById('channels');
-const searchEl = document.getElementById('search');
-const filterEl = document.getElementById('filter');
-const sourceSel = document.getElementById('sourceSel');
-const reloadBtn = document.getElementById('reload');
-const video = document.getElementById('video');
-const nowInfo = document.getElementById('nowInfo');
-const countEl = document.getElementById('count');
-
-const PLAYLISTS = {
-  uz: 'https://iptv-org.github.io/iptv/countries/uz.m3u',
-  lang: 'https://iptv-org.github.io/iptv/languages/uz.m3u'
-};
-
-let allChannels = [];
-let hls;
-
-// ——— Util: Favoritlar (localStorage)
-const FKEY = 'uz_tv_favs';
-const getFavs = () => new Set(JSON.parse(localStorage.getItem(FKEY) || '[]'));
-const setFavs = (set) => localStorage.setItem(FKEY, JSON.stringify([...set]));
-
-// ——— Yuklash
-async function loadChannels(){
-  const url = PLAYLISTS[sourceSel.value];
-  const text = await (await fetch(url)).text();
-  allChannels = parseM3U(text)
-    .filter(c => c.url.endsWith('.m3u8')) // HLS bo‘lganlar
-    .map(c => ({...c, country: c.country || 'UZ'}));
-  render();
-}
-
-// ——— M3U parser
-function parseM3U(text){
-  const out = [];
-  let cur = null;
-  for(const raw of text.split('\n')){
-    const line = raw.trim();
-    if(line.startsWith('#EXTINF:')){
-      const name = line.split(',').pop().trim();
-      const logo = (line.match(/tvg-logo="(.*?)"/)||[])[1] || '';
-      const group = (line.match(/group-title="(.*?)"/)||[])[1] || '';
-      const country = (line.match(/tvg-country="(.*?)"/)||[])[1] || '';
-      cur = {name, logo, group, country};
-    }else if(line && !line.startsWith('#') && cur){
-      cur.url = line;
-      out.push(cur);
-      cur = null;
-    }
-  }
-  return out;
-}
-
-// ——— Filtrlash + chizish
-function render(){
-  const favs = getFavs();
-  const q = searchEl.value.trim().toLowerCase();
-  const mode = filterEl.value;
-
-  let list = allChannels.filter(c=>{
-    const hit = (c.name||'').toLowerCase().includes(q)
-             || (c.group||'').toLowerCase().includes(q);
-    if(!hit) return false;
-    if(mode === 'favorites') return favs.has(c.name);
-    if(mode === 'news') return /news|yangilik|axborot/i.test(c.group+c.name);
-    if(mode === 'entertainment') return /entertainment|movie|serial|ko'ngil/i.test(c.group+c.name);
-    if(mode === 'sports') return /sport/i.test(c.group+c.name);
-    if(mode === 'music') return /music|musiqa/i.test(c.group+c.name);
-    if(mode === 'kids') return /kids|bolalar/i.test(c.group+c.name);
-    if(mode === 'religious') return /relig|islom|diniy/i.test(c.group+c.name);
-    if(mode === 'education') return /edu|study|ta'lim/i.test(c.group+c.name);
-    if(mode === 'regional') return /regional|hudud|mahalliy|local/i.test(c.group+c.name);
-    return true;
-  });
-
-  countEl.textContent = `${list.length} kanal`;
-  listEl.innerHTML = '';
-
-  list.forEach(ch=>{
-    const li = document.createElement('li');
-
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.src = ch.logo || 'https://dummyimage.com/120x72/000/fff.png&text=TV';
-
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    const nm = document.createElement('div');
-    nm.className = 'name';
-    nm.textContent = ch.name;
-    const sb = document.createElement('div');
-    sb.className = 'sub';
-    sb.textContent = [ch.group||'TV', ch.country||'UZ'].filter(Boolean).join(' · ');
-    meta.append(nm,sb);
-
-    const favBtn = document.createElement('button');
-    favBtn.className = 'fav';
-    favBtn.textContent = getFavs().has(ch.name) ? '★' : '☆';
-    favBtn.title = 'Sevimlilarga qo‘shish/olib tashlash';
-    favBtn.onclick = (e)=>{
-      e.stopPropagation();
-      const set = getFavs();
-      if(set.has(ch.name)) set.delete(ch.name); else set.add(ch.name);
-      setFavs(set);
-      favBtn.textContent = set.has(ch.name) ? '★' : '☆';
+    const PLAYLISTS = {
+      uz: 'https://iptv-org.github.io/iptv/countries/uz.m3u',
+      lang: 'https://iptv-org.github.io/iptv/languages/uz.m3u'
     };
 
-    li.append(img, meta, favBtn);
-    li.onclick = () => play(ch);
-    listEl.appendChild(li);
-  });
-}
+    let allChannels = [];
+    let hls;
+    let currentChannel = null; // hozirgi tanlangan kanal
 
-// ——— Ijro
-function destroyHls(){
-  if(hls){ hls.destroy(); hls = null; }
-}
-function play(ch){
-  destroyHls();
-  nowInfo.textContent = `Ijro: ${ch.name}`;
-  if(Hls.isSupported()){
-    hls = new Hls({maxBufferLength:20});
-    hls.loadSource(ch.url);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.ERROR, (_,data)=>{
-      if(data.fatal){
-        nowInfo.textContent = `Xatolik: ${data.type}. Manba ishlamadi.`;
+    // ——— Util: Favoritlar (localStorage)
+    const FKEY = 'uz_tv_favs';
+    const getFavs = () => new Set(JSON.parse(localStorage.getItem(FKEY) || '[]'));
+    const setFavs = (set) => localStorage.setItem(FKEY, JSON.stringify([...set]));
+
+    // ——— Playlist yuklash
+    async function loadChannels(){
+      const url = PLAYLISTS[sourceSel.value];
+      const text = await (await fetch(url)).text();
+      allChannels = parseM3U(text)
+        .filter(c => c.url.endsWith('.m3u8')) // faqat HLS
+        .map(c => ({...c, country: c.country || 'UZ'}));
+      render();
+    }
+
+    // ——— M3U parser
+    function parseM3U(text){
+      const out = [];
+      let cur = null;
+      for(const raw of text.split('\n')){
+        const line = raw.trim();
+        if(line.startsWith('#EXTINF:')){
+          const name = line.split(',').pop().trim();
+          const logo = (line.match(/tvg-logo="(.*?)"/)||[])[1] || '';
+          const group = (line.match(/group-title="(.*?)"/)||[])[1] || '';
+          const country = (line.match(/tvg-country="(.*?)"/)||[])[1] || '';
+          cur = {name, logo, group, country};
+        }else if(line && !line.startsWith('#') && cur){
+          cur.url = line;
+          out.push(cur);
+          cur = null;
+        }
       }
-    });
-  }else{
-    video.src = ch.url;
-  }
-  video.play().catch(()=>{});
-}
+      return out;
+    }
 
-// ——— Hodisalar
-searchEl.addEventListener('input', render);
-filterEl.addEventListener('change', render);
-sourceSel.addEventListener('change', loadChannels);
-reloadBtn.addEventListener('click', loadChannels);
+    // ——— Filtrlash + chizish
+    function render(){
+      const favs = getFavs();
+      const q = searchEl.value.trim().toLowerCase();
+      const mode = filterEl.value;
 
-// ——— Boshlash
-loadChannels();
-</script>
+      let list = allChannels.filter(c=>{
+        const hit = (c.name||'').toLowerCase().includes(q)
+                 || (c.group||'').toLowerCase().includes(q);
+        if(!hit) return false;
+        if(mode === 'favorites') return favs.has(c.name);
+        if(mode === 'news') return /news|yangilik|axborot/i.test(c.group+c.name);
+        if(mode === 'entertainment') return /entertainment|movie|serial|ko'ngil/i.test(c.group+c.name);
+        if(mode === 'sports') return /sport/i.test(c.group+c.name);
+        if(mode === 'music') return /music|musiqa/i.test(c.group+c.name);
+        if(mode === 'kids') return /kids|bolalar/i.test(c.group+c.name);
+        if(mode === 'religious') return /relig|islom|diniy/i.test(c.group+c.name);
+        if(mode === 'education') return /edu|study|ta'lim/i.test(c.group+c.name);
+        if(mode === 'regional') return /regional|hudud|mahalliy|local/i.test(c.group+c.name);
+        return true;
+      });
 
-<!-- Eslatma: faqat ochiq (public) strimlar ko‘rsatiladi. Mualliflik huquqlariga rioya qiling. -->
+      countEl.textContent = `${list.length} kanal`;
+      listEl.innerHTML = '';
+
+      list.forEach(ch=>{
+        const li = document.createElement('li');
+
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = ch.logo || 'https://dummyimage.com/120x72/000/fff.png&text=TV';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const nm = document.createElement('div');
+        nm.className = 'name';
+        nm.textContent = ch.name;
+        const sb = document.createElement('div');
+        sb.className = 'sub';
+        sb.textContent = [ch.group||'TV', ch.country||'UZ'].filter(Boolean).join(' · ');
+        meta.append(nm,sb);
+
+        const favBtn = document.createElement('button');
+        favBtn.className = 'fav';
+        favBtn.textContent = getFavs().has(ch.name) ? '★' : '☆';
+        favBtn.title = 'Sevimlilarga qo‘shish/olib tashlash';
+        favBtn.onclick = (e)=>{
+          e.stopPropagation();
+          const set = getFavs();
+          if(set.has(ch.name)) set.delete(ch.name); else set.add(ch.name);
+          setFavs(set);
+          favBtn.textContent = set.has(ch.name) ? '★' : '☆';
+        };
+
+        li.append(img, meta, favBtn);
+        li.onclick = () => play(ch);
+        listEl.appendChild(li);
+      });
+    }
+
+    // ——— HLS destroy
+    function destroyHls(){
+      if(hls){ hls.destroy(); hls = null; }
+    }
+
+    // ——— Lokal ijro
+    function playLocally(ch){
+      destroyHls();
+      video.removeAttribute('src');
+      if (Hls.isSupported()){
+        hls = new Hls({maxBufferLength:20});
+        hls.loadSource(ch.url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.ERROR, (_,data)=>{
+          if(data.fatal){
+            nowInfo.textContent = `Xatolik: ${data.type}. Manba ishlamadi.`;
+          }
+        });
+      }else{
+        video.src = ch.url;
+      }
+      video.play().catch(()=>{});
+    }
+
+    // ——— CAST: Sender SDK init
+    window.__onGCastApiAvailable = function(isAvailable) {
+      if (!isAvailable) return;
+      const context = cast.framework.CastContext.getInstance();
+      context.setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
+      });
+
+      // Sessiya holatini kuzatish
+      context.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, (e)=>{
+        if(e.sessionState === cast.framework.SessionState.SESSION_STARTED ||
+           e.sessionState === cast.framework.SessionState.SESSION_RESUMED){
+          // Agar kanal tanlangan bo‘lsa, darhol TV ga yuboramiz
+          if(currentChannel) castLoad(currentChannel);
+          nowInfo.textContent = `TV ga ulanildi: ${context.getCurrentSession()?.getCastDevice()?.friendlyName || 'Chromecast'}`;
+        }
+        if(e.sessionState === cast.framework.SessionState.SESSION_ENDED){
+          // Sessiya tugasa — lokal ijroga qaytish
+          if(currentChannel) {
+            nowInfo.textContent = `Sessiya tugadi. Lokal ijroga qaytdi: ${currentChannel.name}`;
+            playLocally(currentChannel);
+          }
+        }
+      });
+    };
+
+    // ——— CAST: Media yuborish
+    function castLoad(ch){
+      const session = cast.framework.CastContext.getInstance().getCurrentSession();
+      if(!session) return;
+
+      const mediaInfo = new chrome.cast.media.MediaInfo(ch.url, 'application/x-mpegURL');
+      mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
+
+      const md = new chrome.cast.media.GenericMediaMetadata();
+      md.title = ch.name || 'Live TV';
+      md.subtitle = (ch.group || 'TV') + (ch.country ? ` · ${ch.country}` : '');
+      if (ch.logo){
+        md.images = [{ url: ch.logo }];
+      }
+      mediaInfo.metadata = md;
+
+      const request = new chrome.cast.media.LoadRequest(mediaInfo);
+      request.autoplay = true;
+      session.loadMedia(request).then(()=>{
+        nowInfo.textContent = `TV’da ijro: ${ch.name}`;
+      }).catch(err=>{
+        nowInfo.textContent = `Cast xatosi: ${err?.code || err}`;
+      });
+    }
+
+    // ——— Ijro (cast bo‘lsa TV, bo‘lmasa lokal)
+    function play(ch){
+      currentChannel = ch;
+      nowInfo.textContent = `Ijro: ${ch.name}`;
+
+      const context = window.cast && cast.framework ? cast.framework.CastContext.getInstance() : null;
+      const hasCast = !!(context && context.getCurrentSession());
+
+      if (hasCast){
+        // TV ga yuboramiz
+        castLoad(ch);
+      } else {
+        // lokal ijro
+        playLocally(ch);
+      }
+    }
+
+    // ——— Hodisalar
+    searchEl.addEventListener('input', render);
+    filterEl.addEventListener('change', render);
+    sourceSel.addEventListener('change', loadChannels);
+    reloadBtn.addEventListener('click', loadChannels);
+
+    // ——— Boshlash
+    loadChannels();
+  </script>
+
+  <!-- Eslatma:
+       • Cast tugmasi Chrome/Edge (Android/desktop) da ko‘rinadi.
+       • TV Chromecast built-in yoki Chromecast donglega ulanib, telefon/PC bilan bir Wi-Fi tarmog‘ida bo‘lishi shart.
+       • Ko‘plab IPTV HLS oqimlari to‘g‘ridan-to‘g‘ri Chromecast’da ishlaydi (application/x-mpegURL).
+  -->
 </body>
 </html>

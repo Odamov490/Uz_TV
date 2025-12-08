@@ -54,7 +54,6 @@
       overflow: hidden;
     }
 
-    /* 👇 shoira.png logosi uchun */
     .logo-circle img {
       width: 100%;
       height: 100%;
@@ -322,7 +321,6 @@
 <body>
   <header>
     <div class="logo-circle">
-      <!-- shoira.png index.html bilan bir papkada turadi -->
       <img src="shoira.png" alt="Shoira TV">
     </div>
     <div class="title-block">
@@ -351,6 +349,7 @@
           <input id="search" placeholder="Kanal yoki toifa bo‘yicha qidirish…" />
           <select id="filter">
             <option value="all">Barchasi</option>
+            <option value="uzonly">🇺🇿 O‘zbekiston</option> <!-- YANGI -->
             <option value="favorites">★ Sevimlilar</option>
             <option value="news">📰 Yangilik</option>
             <option value="entertainment">🎭 Ko‘ngilochar</option>
@@ -434,7 +433,6 @@
       errEl.textContent = '';
       try {
         ALL = [];
-        // bir nechta playlistni ketma-ket yuklaymiz
         for (const url of SOURCES) {
           try {
             const txt = await (await fetch(url)).text();
@@ -470,14 +468,17 @@
 
       let list = ALL.filter(c => {
         const hay = ((c.name || '') + ' ' + (c.group || '')).toLowerCase();
+        const country = (c.country || '').toUpperCase();
+
         if (q && !hay.includes(q)) return false;
 
         if (mode === 'favorites') return favs.has(c.name);
-        if (mode === 'news') return /news|yangilik|inform/i.test(hay);
+        if (mode === 'uzonly')   return country === 'UZ'; // 🔹 faqat O‘zbekiston
+        if (mode === 'news')     return /news|yangilik|inform/i.test(hay);
         if (mode === 'entertainment') return /movie|film|serial|entertain/i.test(hay);
-        if (mode === 'sports') return /sport/i.test(hay);
-        if (mode === 'music') return /music|muz|musiq/i.test(hay);
-        if (mode === 'kids') return /kids|child|bolalar|junior|cartoon|animation/i.test(hay);
+        if (mode === 'sports')   return /sport/i.test(hay);
+        if (mode === 'music')    return /music|muz|musiq/i.test(hay);
+        if (mode === 'kids')     return /kids|child|bolalar|junior|cartoon|animation/i.test(hay);
 
         return true;
       });
